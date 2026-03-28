@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String?
+  googleId      String?  @unique
+  name          String
+  bio           String?
+  avatarUrl     String?
+  locationLat   Float?
+  locationLng   Float?
+  locationName  String?
+  isEduVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  posts            Post[]
+  sessionsGiven    Session[]      @relation("provider")
+  sessionsReceived Session[]      @relation("requester")
+  sentMessages     Message[]
+  blocksGiven      Block[]        @relation("blocker")
+  blocksReceived   Block[]        @relation("blocked")
+  reports          Report[]
+  conversations1   Conversation[] @relation("user1")
+  conversations2   Conversation[] @relation("user2")
+}
+
+model Post {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String
+  tags          String[]
+  exchangeTypes String[]
+  isRemote      Boolean  @default(false)
+  lat           Float?
+  lng           Float?
+  locationName  String?
+  availability  String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  sessions Session[]
+}
+
+model Session {
+  id             String    @id @default(cuid())
+  postId         String
+  post           Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  providerId     String
+  provider       User      @relation("provider", fields: [providerId], references: [id])
+  requesterId    String
+  requester      User      @relation("requester", fields: [requesterId], references: [id])
+  status         String    @default("pending")
+  exchangeAgreed String?
+  scheduledAt    DateTime?
+  completedAt    DateTime?
+  conversationId String?
+  createdAt      DateTime  @default(now())
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  user1Id   String
+  user1     User      @relation("user1", fields: [user1Id], references: [id])
+  user2Id   String
+  user2     User      @relation("user2", fields: [user2Id], references: [id])
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  content        String
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("blocker", fields: [blockerId], references: [id])
+  blockedId String
+  blocked   User     @relation("blocked", fields: [blockedId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+}
+
+model Report {
+  id             String   @id @default(cuid())
+  reporterId     String
+  reporter       User     @relation(fields: [reporterId], references: [id])
+  reportedUserId String?
+  reportedPostId String?
+  reason         String
+  createdAt      DateTime @default(now())
+}

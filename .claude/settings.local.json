@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c \"mklink /D C:\\\\Users\\\\matta\\\\.claude C:\\\\Users\\\\matta\\\\OneDrive\\\\.cc_data\\\\dot_claude\")"
+    ]
+  }
+}
